@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
 import {transition, trigger, useAnimation} from "@angular/animations";
-import { shakeX } from 'ng-animate';
+import { bounce, flash, flip, pulse, shakeX } from 'ng-animate';
+import { lastValueFrom, timer } from 'rxjs';
+import { NgFor } from '@angular/common';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +15,27 @@ import { shakeX } from 'ng-animate';
         useAnimation(shakeX, { params: { timing: 0.5 } })
       ),
     ]),
+    trigger("attack", [transition(":increment",  [useAnimation(flash, {params: {timing : 0.3}}),useAnimation(pulse, { params: {timing : 0.3, scale : 4.5}})])]),
+    trigger("bounce", [
+      transition(
+        ":increment",
+        useAnimation(bounce, {params: {timing: 1}})
+      ),
+    ]),
+    trigger("flip", [
+      transition(
+        ":increment",
+        useAnimation(flip,  {params: {timing: 0.75}})
+      ),
+    ]),
+    trigger("shake", [
+      transition(
+        ":increment",
+        useAnimation(shakeX,  {params: {timing: 0.75}})
+      ),
+    ]),
+    
+    
   ]
 })
 export class AppComponent {
@@ -21,6 +44,14 @@ export class AppComponent {
   ng_death = 0;
   ng_attack = 0;
   ng_preAttack = 0;
+
+  ng_shake = 0;
+  ng_flip = 0;
+  ng_bounce = 0;
+
+  css_hit = false
+  css_rotateCenter = false
+  css_rotateTop = false
 
   constructor() {
   }
@@ -43,14 +74,30 @@ export class AppComponent {
   attack(){
     // TODO Jouer une animation et augmenter l'intensité du mouvement avec scale
     // TODO Jouer une autre animation avant
+    this.ng_attack++
   }
 
   hit(){
     // TODO Utilisé Animista pour faire une animation différente avec css (wobble)
+    this.css_hit = true
+    
+    setTimeout(() => {this.css_hit = false}, 1000)
+  }
+
+  async bsf() {
+    this.ng_bounce++
+    
+    await lastValueFrom(timer(1000))
+
+    this.ng_shake++
+
+    await lastValueFrom(timer(750))
+
+    this.ng_flip++
   }
 
   showSlime(){
-    var element = document.getElementById("slimeyId");
+    let element = document.getElementById("slimeyId");
     element?.classList.remove("fadeOut");
     element?.classList.add("fadeIn");
   }
@@ -59,5 +106,17 @@ export class AppComponent {
     let element = document.getElementById("slimeyId");
     element?.classList.remove("fadeIn");
     element?.classList.add("fadeOut");
+  }
+
+  playLoop() {
+    this.css_rotateCenter = true
+
+    setTimeout(() => {this.css_rotateTop = true}, 1600)
+
+    setTimeout(() => {
+      this.css_rotateCenter = false
+      this.css_rotateTop = false
+      this.playLoop()
+    }, 2300)
   }
 }
